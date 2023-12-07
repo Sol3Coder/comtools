@@ -1,61 +1,30 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
-
-const dataBitsData = [
-  {
-    key: "node1",
-    title: "7",
-  },
-  {
-    key: "node2",
-    title: "8",
-  },
-];
-const parityData = [
-  {
-    key: "node1",
-    title: "None",
-  },
-  {
-    key: "node2",
-    title: "Odd",
-  },
-  {
-    key: "node3",
-    title: "Even",
-  },
-  {
-    key: "node4",
-    title: "Mark",
-  },
-  {
-    key: "node5",
-    title: "Space",
-  },
-];
-const stopBitsData = [
-  {
-    key: "node1",
-    title: "1",
-  },
-  {
-    key: "node2",
-    title: "1.5",
-  },
-  {
-    key: "node3",
-    title: "2",
-  },
-];
+import { ref } from "vue";
 
 const serialNameData = getJsonObject();
+var isOpen = false;
+var buttonText = ref("连接");
+function serialSwitch() {
+  if (isOpen) {
+    buttonText.value = "连接";
+    invoke("close");
+
+    isOpen = false;
+  } else {
+    buttonText.value = "断开";
+    invoke("open", { name: "COM1" });
+
+    isOpen = true;
+  }
+}
 
 function getJsonObject(): any {
-  var ports_json = [];
+  var ports_json: { value: string; label: any; other: string }[] = [];
 
   invoke("get_ports").then((ports) => {
     var nIndex = 1;
-    ports.forEach((port) => {
+    ports.forEach((port: any) => {
       let jsonObject = {
         value: "node" + nIndex,
 
@@ -122,18 +91,22 @@ function getJsonObject(): any {
               </a-select>
             </a-grid-item>
             <a-grid-item :span="2">
-              <a-button type="outline" long>连接</a-button>
+              <a-button
+                @click="serialSwitch"
+                type="outline"
+                id="open-btn"
+                long
+                >{{ buttonText }}</a-button
+              >
             </a-grid-item>
           </a-grid>
         </div>
       </a-layout-sider>
       <a-layout-sider style="width: 70%">
         <div class="container" style="padding-top: 5%">
-          <a-textarea
-            style="height: 20rem"
-            placeholder="Please enter something"
-            allow-clear
-          />
+          <a-space>
+            <a-descriptions :data="serialNameData" />
+          </a-space>
         </div>
       </a-layout-sider>
     </a-layout>
