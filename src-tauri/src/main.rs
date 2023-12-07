@@ -3,7 +3,7 @@
 use serialport::{available_ports, Parity, SerialPort};
 use std::sync::Mutex;
 use std::thread;
-use tauri::Manager;
+use tauri::{App, AppHandle, Manager};
 
 use std::time::Duration;
 pub static PORT: Mutex<Option<Box<dyn SerialPort>>> = Mutex::new(None);
@@ -54,28 +54,35 @@ fn send(msg: &str) {
         port.write(&u8_array).expect("write fail!");
     };
 }
-#[tauri::command]
-fn read() -> String {
+fn read<R: tauri::Runtime>(manager: &impl Manager<R>) {
     if let Some(mut port) = PORT.lock().unwrap().as_deref_mut() {
         let mut buf = [0; 1024];
         let n = match port.read(&mut buf) {
             Ok(n) => n,
-            Err(e) => {
-                println!("Error reading from serial port: {}", e);
-                return String::new();
-            }
+            Err(_e) => 0,
         };
 
         if n > 0 {
             let data = String::from_utf8_lossy(&buf[0..n]);
-            return data.as_ref().to_string();
+            manager.emit_all("event", data.as_ref().to_string());
         }
     };
-    return String::new();
 }
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_ports, open, close, read, send])
+        .invoke_handler(tauri::generate_handler![get_ports, open, close, send])
+        .setup(|app| {
+            let app_handle = app.handle();
+            tauri::async_runtime::spawn(async move {
+                // A loop that takes output from the async process and sends it
+                // to the webview via a Tauri Event
+                loop {
+                    read(&app_handle);
+                }
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
