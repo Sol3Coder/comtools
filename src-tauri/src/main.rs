@@ -2,8 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use serialport::{available_ports, Parity, SerialPort};
 use std::sync::Mutex;
-use std::thread;
-use tauri::{App, AppHandle, Manager};
+use tauri::Manager;
 
 use std::time::Duration;
 pub static PORT: Mutex<Option<Box<dyn SerialPort>>> = Mutex::new(None);
@@ -56,15 +55,23 @@ fn send(msg: &str) {
 }
 fn read<R: tauri::Runtime>(manager: &impl Manager<R>) {
     if let Some(mut port) = PORT.lock().unwrap().as_deref_mut() {
-        let mut buf = [0; 1024];
-        let n = match port.read(&mut buf) {
+        let mut serial_buf: Vec<u8> = vec![0; 1024];
+
+        let n = match port.read(serial_buf.as_mut_slice()) {
             Ok(n) => n,
             Err(_e) => 0,
         };
 
         if n > 0 {
-            let data = String::from_utf8_lossy(&buf[0..n]);
-            manager.emit_all("readMsgEvent", data.as_ref().to_string());
+            let _ = manager.emit_all(
+                "readMsgEvent",
+                serial_buf[0..n]
+                    .iter()
+                    .map(|b| format!("{:02x}", b))
+                    .collect::<Vec<String>>()
+                    .join(" ")
+                    .to_ascii_uppercase(),
+            );
         }
     };
 }

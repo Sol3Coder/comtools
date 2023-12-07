@@ -7,6 +7,7 @@ import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
 async function listen_to_greet() {
   const unlisten = await listen("readMsgEvent", (event: any) => {
+    readText.value += event.payload + " ";
     console.log(event.payload);
   });
 }
@@ -28,6 +29,7 @@ const ModalContent = {
 };
 const serialNameData = getJsonObject();
 var isOpen = false;
+const readText = ref(" ");
 
 var serialName: { value: string; label: any; other: string };
 const buttonText = ref("连接");
@@ -139,7 +141,7 @@ function sendMsg() {
         </div>
       </a-layout-sider>
       <a-layout-sider style="width: 70%">
-        <div class="container" style="padding-top: 5%"></div>
+        <div class="container" style="padding-top: 5%">{{ readText }}</div>
       </a-layout-sider>
     </a-layout>
 
