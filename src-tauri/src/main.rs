@@ -31,6 +31,29 @@ fn close() {
         drop(port);
     };
 }
+fn add_spaces(input: &str) -> String {
+    let chars: Vec<char> = input.replace(" ", "").chars().collect();
+    let chunks: Vec<String> = chars
+        .chunks(2)
+        .map(|chars| chars.iter().collect::<String>())
+        .collect();
+    chunks.join(" ")
+}
+fn string_to_u8_array(input: &str) -> Vec<u8> {
+    input
+        .split_whitespace()
+        .map(|s| u8::from_str_radix(s, 16).unwrap())
+        .collect()
+}
+
+#[tauri::command]
+fn send(msg: &str) {
+    if let Some(mut port) = PORT.lock().unwrap().as_deref_mut() {
+        let u8_array = string_to_u8_array(add_spaces(msg).as_str());
+
+        port.write(&u8_array).expect("write fail!");
+    };
+}
 #[tauri::command]
 fn read() -> String {
     if let Some(mut port) = PORT.lock().unwrap().as_deref_mut() {
@@ -52,7 +75,7 @@ fn read() -> String {
 }
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![get_ports, open, close, read])
+        .invoke_handler(tauri::generate_handler![get_ports, open, close, read, send])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -1,21 +1,45 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref } from "vue";
+import { h } from "vue";
+import { Modal, Button } from "@arco-design/web-vue";
 
+const ModalContent = {
+  setup() {
+    return () =>
+      h("div", { class: "warning-modal-content" }, [
+        h(
+          "span",
+          { style: "margin-bottom: 10px;" },
+          "打开串口失败！请检查是否占用！"
+        ),
+      ]);
+  },
+};
 const serialNameData = getJsonObject();
 var isOpen = false;
-var buttonText = ref("连接");
+
+var serialName: { value: string; label: any; other: string };
+dialog: false;
+errorMessage: "An error occurred.";
+const buttonText = ref("连接");
 function serialSwitch() {
   if (isOpen) {
     buttonText.value = "连接";
     invoke("close");
-
     isOpen = false;
   } else {
-    buttonText.value = "断开";
-    invoke("open", { name: "COM1" });
-
-    isOpen = true;
+    invoke("open", { name: serialName["label"] }).then((bSuc) => {
+      if (bSuc) {
+        buttonText.value = "断开";
+        isOpen = true;
+      } else {
+        Modal.warning({
+          title: "错误",
+          content: () => h(ModalContent),
+        });
+      }
+    });
   }
 }
 
@@ -31,13 +55,17 @@ function getJsonObject(): any {
         label: port,
         other: "extra",
       };
-
+      serialName = jsonObject;
       ports_json.push(jsonObject);
       nIndex++;
     });
   });
 
   return ports_json;
+}
+
+function sendMsg() {
+  invoke("send", { msg: inputText });
 }
 </script>
 
@@ -49,7 +77,7 @@ function getJsonObject(): any {
           <a-grid :cols="2" :colGap="0" :rowGap="16">
             <a-grid-item>串口号</a-grid-item>
             <a-grid-item>
-              <a-select :default-value="' '">
+              <a-select :default-value="' '" v-model="serialName">
                 <a-option
                   v-for="item of serialNameData"
                   :value="item"
@@ -103,11 +131,7 @@ function getJsonObject(): any {
         </div>
       </a-layout-sider>
       <a-layout-sider style="width: 70%">
-        <div class="container" style="padding-top: 5%">
-          <a-space>
-            <a-descriptions :data="serialNameData" />
-          </a-space>
-        </div>
+        <div class="container" style="padding-top: 5%"></div>
       </a-layout-sider>
     </a-layout>
 
@@ -128,12 +152,11 @@ function getJsonObject(): any {
       >
       <a-layout-sider style="width: 70%">
         <div class="container" style="padding-top: 5%">
-          <a-textarea
-            style="height: 10rem"
-            placeholder="Please enter something"
-            allow-clear
-          /></div
-      ></a-layout-sider>
+          <a-textarea v-model="inputText" style="height: 10rem" allow-clear />
+
+          <a-button @click="sendMsg" type="outline">发送</a-button>
+        </div></a-layout-sider
+      >
     </a-layout>
   </a-layout>
 </template>
