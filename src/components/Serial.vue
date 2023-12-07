@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
-import { ref } from "vue";
+import { listen } from "@tauri-apps/api/event";
+
+import { onMounted, ref } from "vue";
 import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
+async function listen_to_greet() {
+  const unlisten = await listen("readMsgEvent", (event: any) => {
+    console.log(event.payload);
+  });
+}
 
+onMounted(() => {
+  listen_to_greet();
+});
 const ModalContent = {
   setup() {
     return () =>
@@ -20,8 +30,6 @@ const serialNameData = getJsonObject();
 var isOpen = false;
 
 var serialName: { value: string; label: any; other: string };
-dialog: false;
-errorMessage: "An error occurred.";
 const buttonText = ref("连接");
 function serialSwitch() {
   if (isOpen) {

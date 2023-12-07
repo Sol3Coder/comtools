@@ -64,7 +64,7 @@ fn read<R: tauri::Runtime>(manager: &impl Manager<R>) {
 
         if n > 0 {
             let data = String::from_utf8_lossy(&buf[0..n]);
-            manager.emit_all("event", data.as_ref().to_string());
+            manager.emit_all("readMsgEvent", data.as_ref().to_string());
         }
     };
 }
