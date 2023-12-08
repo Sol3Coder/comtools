@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use serialport::{available_ports, Parity, SerialPort};
 use std::sync::Mutex;
+use std::thread;
 use tauri::Manager;
 
 use std::time::Duration;
@@ -85,6 +86,7 @@ fn main() {
                 // to the webview via a Tauri Event
                 loop {
                     read(&app_handle);
+                    thread::sleep(Duration::from_millis(10));
                 }
             });
 
