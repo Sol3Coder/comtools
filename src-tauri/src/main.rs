@@ -1,5 +1,6 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use chrono::{DateTime, Local};
 use serialport::{available_ports, Parity, SerialPort};
 use std::sync::Mutex;
 use std::thread;
@@ -7,6 +8,12 @@ use tauri::Manager;
 
 use std::time::Duration;
 pub static PORT: Mutex<Option<Box<dyn SerialPort>>> = Mutex::new(None);
+#[derive(Clone, serde::Serialize)]
+struct ReadMsg {
+    msg: String,
+    msg_time: String,
+    len: usize,
+}
 #[tauri::command]
 fn get_ports() -> Vec<String> {
     let ports = available_ports().unwrap();
@@ -66,12 +73,16 @@ fn read<R: tauri::Runtime>(manager: &impl Manager<R>) {
         if n > 0 {
             let _ = manager.emit_all(
                 "readMsgEvent",
-                serial_buf[0..n]
-                    .iter()
-                    .map(|b| format!("{:02x}", b))
-                    .collect::<Vec<String>>()
-                    .join(" ")
-                    .to_ascii_uppercase(),
+                ReadMsg {
+                    msg: serial_buf[0..n]
+                        .iter()
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                        .to_ascii_uppercase(),
+                    msg_time: Local::now().format("%Y-%m-%d %H:%M:%S").to_string(),
+                    len: n,
+                },
             );
         }
     };

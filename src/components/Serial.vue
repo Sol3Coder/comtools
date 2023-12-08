@@ -6,12 +6,15 @@ import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
 const inputText = ref(" ");
 const scrollbarRef = ref();
-const readData = ref("");
+const readData = ref([]);
 var nHeight = 0;
 async function listen_to_event() {
   await listen("readMsgEvent", (event: any) => {
-    readData.value += event.payload + " ";
-    nHeight = nHeight + 20;
+    readData.value.push(
+      event.payload["msg_time"] + " len:" + event.payload["len"]
+    );
+    readData.value.push(event.payload["msg"]);
+    nHeight = nHeight + 100;
     scrollbarRef.value.scrollTop(nHeight);
   });
 }
@@ -31,7 +34,7 @@ const ModalContent = {
   },
 };
 const serialName = ref({});
-const serialNameData = getJsonObject();
+const serialNameData = ref(getJsonObject());
 function getJsonObject(): any {
   var ports_json: { value: string; label: any; other: string }[] = [];
 
@@ -143,7 +146,18 @@ function sendMsg() {
             ref="scrollbarRef"
             style="height: 300px; overflow: auto; text-align: left"
           >
-            <p v-text="readData"></p>
+            <p
+              v-for="(item, index) in readData"
+              :key="index"
+              style="
+                margin-bottom: 0px;
+                margin-top: 0px;
+                padding-top: 0px;
+                padding-bottom: 0px;
+              "
+            >
+              {{ item }}
+            </p>
           </a-scrollbar>
         </div>
       </a-layout-sider>
