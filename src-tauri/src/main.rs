@@ -1,12 +1,31 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use chrono::{DateTime, Local};
+use lazy_static::lazy_static;
 use serialport::{available_ports, Parity, SerialPort};
+use std::sync::mpsc;
+use std::sync::Arc;
 use std::sync::Mutex;
+
 use std::thread;
+use std::time::Duration;
 use tauri::Manager;
 
-use std::time::Duration;
+struct MessageChannel {
+    tx: mpsc::Sender<Message>,
+    rx: mpsc::Receiver<Message>,
+}
+
+struct Message {
+    data: String,
+}
+lazy_static! {
+    static ref TX: Arc<Mutex<mpsc::Sender<Message>>> = {
+        let (tx, _rx) = mpsc::channel();
+        Arc::new(Mutex::new(tx))
+    };
+}
+
 pub static PORT: Mutex<Option<Box<dyn SerialPort>>> = Mutex::new(None);
 #[derive(Clone, serde::Serialize)]
 struct ReadMsg {
@@ -55,6 +74,11 @@ fn string_to_u8_array(input: &str) -> Vec<u8> {
 
 #[tauri::command]
 fn send(msg: &str) {
+    let tx = TX.lock().unwrap();
+    tx.send(Message {
+        data: "test".to_string(),
+    })
+    .unwrap();
     if let Some(mut port) = PORT.lock().unwrap().as_deref_mut() {
         let u8_array = string_to_u8_array(add_spaces(msg).as_str());
 
