@@ -373,7 +373,6 @@ name = "comtools"
 version = "0.0.0"
 dependencies = [
  "chrono",
- "lazy_static",
  "serde",
  "serde_json",
  "serialport",
