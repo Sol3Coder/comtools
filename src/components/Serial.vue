@@ -29,31 +29,9 @@ const ModalContent = {
       ]);
   },
 };
+const serialName = ref({});
+
 const serialNameData = getJsonObject();
-var isOpen = false;
-
-var serialName: { value: string; label: any; other: string };
-const buttonText = ref("连接");
-function serialSwitch() {
-  if (isOpen) {
-    buttonText.value = "连接";
-    invoke("close");
-    isOpen = false;
-  } else {
-    invoke("open", { name: serialName["label"] }).then((bSuc) => {
-      if (bSuc) {
-        buttonText.value = "断开";
-        isOpen = true;
-      } else {
-        Modal.warning({
-          title: "错误",
-          content: () => h(ModalContent),
-        });
-      }
-    });
-  }
-}
-
 function getJsonObject(): any {
   var ports_json: { value: string; label: any; other: string }[] = [];
 
@@ -66,13 +44,35 @@ function getJsonObject(): any {
         label: port,
         other: "extra",
       };
-      serialName = jsonObject;
+      serialName.value = jsonObject;
       ports_json.push(jsonObject);
       nIndex++;
     });
   });
 
   return ports_json;
+}
+var isOpen = false;
+
+const buttonText = ref("连接");
+function serialSwitch() {
+  if (isOpen) {
+    buttonText.value = "连接";
+    invoke("close");
+    isOpen = false;
+  } else {
+    invoke("open", { name: serialName.value["label"] }).then((bSuc) => {
+      if (bSuc) {
+        buttonText.value = "断开";
+        isOpen = true;
+      } else {
+        Modal.warning({
+          title: "错误",
+          content: () => h(ModalContent),
+        });
+      }
+    });
+  }
 }
 
 function sendMsg() {
