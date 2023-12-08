@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
 import { listen } from "@tauri-apps/api/event";
-
 import { onMounted, ref } from "vue";
 import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
 const inputText = ref(" ");
 const scrollbarRef = ref();
-
 const readData = ref("");
 var nHeight = 0;
 async function listen_to_event() {
@@ -17,7 +15,6 @@ async function listen_to_event() {
     scrollbarRef.value.scrollTop(nHeight);
   });
 }
-
 onMounted(() => {
   listen_to_event();
 });
@@ -34,7 +31,6 @@ const ModalContent = {
   },
 };
 const serialName = ref({});
-
 const serialNameData = getJsonObject();
 function getJsonObject(): any {
   var ports_json: { value: string; label: any; other: string }[] = [];
@@ -53,11 +49,9 @@ function getJsonObject(): any {
       nIndex++;
     });
   });
-
   return ports_json;
 }
 var isOpen = false;
-
 const buttonText = ref("连接");
 function serialSwitch() {
   if (isOpen) {
@@ -78,12 +72,10 @@ function serialSwitch() {
     });
   }
 }
-
 function sendMsg() {
   invoke("send", { msg: inputText.value });
 }
 </script>
-
 <template>
   <a-layout>
     <a-layout tyle="height: 60%">
@@ -156,7 +148,6 @@ function sendMsg() {
         </div>
       </a-layout-sider>
     </a-layout>
-
     <a-layout tyle="height: 40%">
       <a-layout-sider style="width: 30%">
         <div class="container" style="padding-top: 5%">
@@ -175,7 +166,6 @@ function sendMsg() {
       <a-layout-sider style="width: 70%">
         <div class="container" style="padding-top: 5%">
           <a-textarea v-model="inputText" style="height: 10rem" allow-clear />
-
           <a-button @click="sendMsg" type="outline">发送</a-button>
         </div></a-layout-sider
       >
@@ -184,11 +174,6 @@ function sendMsg() {
 </template>
 
 <style scoped>
-.scrollable-div {
-  max-height: 300px; /* 限制div的高度 */
-  overflow-y: auto; /* 添加滚动区域 */
-  text-align: left; /* 文本左对齐 */
-}
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
