@@ -6,16 +6,20 @@ import { onMounted, ref } from "vue";
 import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
 const inputText = ref(" ");
+const scrollbarRef = ref();
 
 const readData = ref("");
-async function listen_to_greet() {
+var nHeight = 0;
+async function listen_to_event() {
   await listen("readMsgEvent", (event: any) => {
     readData.value += event.payload + " ";
+    nHeight = nHeight + 20;
+    scrollbarRef.value.scrollTop(nHeight);
   });
 }
 
 onMounted(() => {
-  listen_to_greet();
+  listen_to_event();
 });
 const ModalContent = {
   setup() {
@@ -76,7 +80,6 @@ function serialSwitch() {
 }
 
 function sendMsg() {
-  console.log(inputText.value);
   invoke("send", { msg: inputText.value });
 }
 </script>
@@ -143,8 +146,13 @@ function sendMsg() {
         </div>
       </a-layout-sider>
       <a-layout-sider style="width: 70%">
-        <div class="scrollable-div">
-          <p v-text="readData"></p>
+        <div class="container" style="padding-top: 5%">
+          <a-scrollbar
+            ref="scrollbarRef"
+            style="height: 300px; overflow: auto; text-align: left"
+          >
+            <p v-text="readData"></p>
+          </a-scrollbar>
         </div>
       </a-layout-sider>
     </a-layout>
