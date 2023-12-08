@@ -5,10 +5,12 @@ import { listen } from "@tauri-apps/api/event";
 import { onMounted, ref } from "vue";
 import { h } from "vue";
 import { Modal } from "@arco-design/web-vue";
+const inputText = ref(" ");
+
+const readData = ref("");
 async function listen_to_greet() {
-  const unlisten = await listen("readMsgEvent", (event: any) => {
-    readText.value += event.payload + " ";
-    console.log(event.payload);
+  await listen("readMsgEvent", (event: any) => {
+    readData.value += event.payload + " ";
   });
 }
 
@@ -29,7 +31,6 @@ const ModalContent = {
 };
 const serialNameData = getJsonObject();
 var isOpen = false;
-const readText = ref(" ");
 
 var serialName: { value: string; label: any; other: string };
 const buttonText = ref("连接");
@@ -75,7 +76,8 @@ function getJsonObject(): any {
 }
 
 function sendMsg() {
-  invoke("send", { msg: inputText });
+  console.log(inputText.value);
+  invoke("send", { msg: inputText.value });
 }
 </script>
 
@@ -141,7 +143,9 @@ function sendMsg() {
         </div>
       </a-layout-sider>
       <a-layout-sider style="width: 70%">
-        <div class="container" style="padding-top: 5%">{{ readText }}</div>
+        <div class="scrollable-div">
+          <p v-text="readData"></p>
+        </div>
       </a-layout-sider>
     </a-layout>
 
@@ -172,6 +176,11 @@ function sendMsg() {
 </template>
 
 <style scoped>
+.scrollable-div {
+  max-height: 300px; /* 限制div的高度 */
+  overflow-y: auto; /* 添加滚动区域 */
+  text-align: left; /* 文本左对齐 */
+}
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
 }
